@@ -1,0 +1,2 @@
+class VentError(Exception):
+    pass
