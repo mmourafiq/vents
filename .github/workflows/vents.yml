@@ -1,10 +1,11 @@
-name: Congruent
-
+name: Vents
 on:
   push:
     branches:
-    - master
-    - testing
+      - main
+      - test
+  pull_request:
+    types: [opened, synchronize]
 jobs:
   library:
     #    if: github.event.comment.body == 'test core'
