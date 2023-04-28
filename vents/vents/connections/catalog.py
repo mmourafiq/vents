@@ -7,11 +7,16 @@ from vents.connections.connection import Connection
 from vents.connections.k8s_resource import K8sResource
 
 
-class ConnectionCatalogMixin(BaseSchemaModel):
+class ConnectionCatalog(BaseSchemaModel):
+    connections: Optional[List[Connection]]
     _all_connections: List[Connection] = PrivateAttr()
     _secrets: Optional[List[K8sResource]] = PrivateAttr()
     _config_maps: Optional[List[K8sResource]] = PrivateAttr()
     _connections_by_names: Dict[str, Connection] = PrivateAttr()
+
+    def set_all_connections(self) -> None:
+        self._all_connections = self.connections[:] if self.connections else []
+        self._connections_by_names = {}
 
     @property
     def all_connections(self) -> List[Connection]:

@@ -1,4 +1,4 @@
-from vents.connections.catalog import ConnectionCatalogMixin
+from vents.connections.catalog import ConnectionCatalog
 from vents.connections.connection import Connection
 from vents.connections.connection_schema import (
     BucketConnection,

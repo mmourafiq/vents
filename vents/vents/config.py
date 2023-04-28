@@ -55,35 +55,40 @@ class AppConfig(BaseSchemaModel):
         return None
 
     def get_from_path(
-        self, context_path: str, keys: Union[Set[str], List[str], str]
+        self, context_paths: List[str], keys: Union[Set[str], List[str], str]
     ) -> Optional[Any]:
         """
         Returns a variable from one of the list of keys based on a base path.
         Args:
-            context_path: str, base path where to look for keys.
+            context_paths: List[str], base path where to look for keys.
             keys: list(str). list of keys to check in the environment
 
         Returns:
             str | None
         """
-        if not check_dirname_exists(context_path, is_dir=True):
+        context_paths = context_paths or []
+        context_paths = [
+            c for c in context_paths if check_dirname_exists(c, is_dir=True)
+        ]
+        if not context_paths:
             return None
 
         keys = keys or []
         if not isinstance(keys, (list, tuple)):
             keys = [keys]  # type: ignore
         for key in keys:
-            key_path = os.path.join(context_path, key)
-            if not os.path.exists(key_path):
-                return None
-            with open(key_path) as f:
-                value = f.read()
-                if value:
-                    if value.lower() == "true":
-                        return True
-                    if value.lower() == "false":
-                        return False
-                    return value
+            for context_path in context_paths:
+                key_path = os.path.join(context_path, key)
+                if not os.path.exists(key_path):
+                    continue
+                with open(key_path) as f:
+                    value = f.read()
+                    if value:
+                        if value.lower() == "true":
+                            return True
+                        if value.lower() == "false":
+                            return False
+                        return value
 
         return None
 
@@ -134,15 +139,15 @@ class AppConfig(BaseSchemaModel):
             )
             return None
 
-    def read_keys(self, context_path: str, keys: List[str]) -> Optional[Any]:
+    def read_keys(self, context_paths: List[str], keys: List[str]) -> Optional[Any]:
         """Returns a variable by checking first a context path and then in the environment."""
         keys = (
             {k.lower() for k in keys}
             | {k.upper() for k in keys}
             | {"".join(k.lower().split("_")) for k in keys}
         )
-        if context_path:
-            value = self.get_from_path(context_path=context_path, keys=keys)
+        if context_paths:
+            value = self.get_from_path(context_paths=context_paths, keys=keys)
             if value is not None:
                 return value
         return self.get_from_env(keys)

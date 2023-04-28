@@ -1,7 +1,7 @@
 import os
 
 from collections.abc import Mapping
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import google.auth
 import google.oauth2.service_account
@@ -20,7 +20,7 @@ def get_default_key_path():
 
 def get_project_id(
     keys: Optional[Union[str, List[str]]] = None,
-    context_path: Optional[str] = None,
+    context_paths: Optional[List[str]] = None,
     **kwargs,
 ) -> Optional[str]:
     value = kwargs.get("project_id")
@@ -32,61 +32,48 @@ def get_project_id(
         "GC_PROJECT_ID",
         "GOOGLE_PROJECT_ID",
     ]
-    return VENTS_CONFIG.read_keys(context_path=context_path, keys=keys)  # type: ignore
+    return VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
 
 
 def get_key_path(
     keys: Optional[Union[str, List[str]]] = None,
-    context_path: Optional[str] = None,
-    **kwargs,
+    context_paths: Optional[List[str]] = None,
 ) -> Optional[str]:
-    value = kwargs.get("key_path")
-    if value:
-        return value
     keys = keys or ["GC_KEY_PATH", "GOOGLE_KEY_PATH", "GOOGLE_APPLICATION_CREDENTIALS"]
-    return VENTS_CONFIG.read_keys(context_path=context_path, keys=keys)  # type: ignore
+    return VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
 
 
 def get_keyfile_dict(
     keys: Optional[Union[str, List[str]]] = None,
-    context_path: Optional[str] = None,
-    **kwargs,
+    context_paths: Optional[List[str]] = None,
 ) -> Optional[Dict]:
-    value = kwargs.get("keyfile_dict")
-    if value:
-        return value
     keys = keys or ["GC_KEYFILE_DICT", "GOOGLE_KEYFILE_DICT"]
-    return VENTS_CONFIG.read_keys(context_path=context_path, keys=keys)  # type: ignore
+    return VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
 
 
 def get_scopes(
     keys: Optional[Union[str, List[str]]] = None,
-    context_path: Optional[str] = None,
-    **kwargs,
-) -> Optional[str]:
-    value = kwargs.get("scopes")
-    if value:
-        return value
+    context_paths: Optional[List[str]] = None,
+) -> Optional[List[str]]:
     keys = keys or ["GC_SCOPES", "GOOGLE_SCOPES"]
-    return VENTS_CONFIG.read_keys(context_path=context_path, keys=keys)  # type: ignore
+    scopes = VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)
+    scopes = VENTS_CONFIG.config_parser.parse(str)(
+        key="scopes",
+        value=scopes,
+        is_optional=True,
+        is_list=True,
+    )
+    return scopes or DEFAULT_SCOPES
 
 
 def get_gc_credentials(
-    context_path: Optional[str] = None,
-    **kwargs,
+    key_path: Optional[str],
+    keyfile_dict: Optional[Union[str, Dict]],
+    scopes: Optional[List[str]],
 ) -> Credentials:
     """
     Returns the Credentials object for Google API
     """
-    key_path = get_key_path(context_path=context_path, **kwargs)
-    keyfile_dict = get_keyfile_dict(context_path=context_path, **kwargs)
-    _scopes = get_scopes(context_path=context_path, **kwargs)
-
-    if _scopes is not None:
-        scopes = [s.strip() for s in _scopes.split(",")]
-    else:
-        scopes = DEFAULT_SCOPES
-
     if not key_path and not keyfile_dict:
         context_secret = get_default_key_path()
         # Look for default GC path
@@ -126,24 +113,3 @@ def get_gc_credentials(
             raise VENTS_CONFIG.exception("Invalid key JSON.")
 
     return credentials
-
-
-def get_gc_access_token(
-    credentials=None,
-    context_path: Optional[str] = None,
-    **kwargs,
-) -> str:
-    credentials = credentials or get_gc_credentials(context_path=context_path, **kwargs)
-    return credentials.token
-
-
-def get_gc_client(
-    credentials=None,
-    context_path: Optional[str] = None,
-    **kwargs,
-) -> Any:
-    from google.cloud.storage.client import Client
-
-    credentials = credentials or get_gc_credentials(context_path=context_path, **kwargs)
-    project_id = get_project_id(context_path=context_path, **kwargs)
-    return Client(project=project_id, credentials=credentials)

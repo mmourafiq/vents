@@ -8,18 +8,19 @@ from boto3.resources.base import ServiceResource
 from botocore.client import BaseClient
 from moto import mock_s3
 
-from vents.providers.aws.base import get_aws_client, get_aws_resource, get_aws_session
+from vents.providers.aws.service import AWSService
 
 
 class TestAwsClient(TestCase):
     @mock_s3
     def test_get_aws_session(self):
-        session = get_aws_session(
-            aws_access_key_id="a1",
-            aws_secret_access_key="a2",
-            aws_session_token="a3",
-            region_name="a4",
+        aws_service = AWSService(
+            access_key_id="a1",
+            secret_access_key="a2",
+            session_token="a3",
+            region="a4",
         )
+        session = aws_service.session
         assert isinstance(session, boto3.session.Session)
         assert session.region_name == "a4"
         credentials = session.get_credentials()
@@ -35,7 +36,8 @@ class TestAwsClient(TestCase):
         os.environ["VENTS_AWS_SECRET_ACCESS_KEY"] = "b2"
         os.environ["VENTS_AWS_SECURITY_TOKEN"] = "b3"
         os.environ["VENTS_AWS_REGION"] = "b4"
-        session = get_aws_session()
+        aws_service = AWSService.load_from_connection(connection=None)
+        session = aws_service.session
         assert isinstance(session, boto3.session.Session)
         assert session.region_name == "b4"
         credentials = session.get_credentials()
@@ -51,10 +53,12 @@ class TestAwsClient(TestCase):
 
     @mock_s3
     def test_get_client(self):
-        s3_client = get_aws_client("s3")
+        aws_service = AWSService(resource="s3")
+        s3_client = aws_service.get_client()
         assert isinstance(s3_client, BaseClient)
 
     @mock_s3
     def test_get_resource(self):
-        s3_resource = get_aws_resource("s3")
+        aws_service = AWSService(resource="s3")
+        s3_resource = aws_service.get_resource()
         assert isinstance(s3_resource, ServiceResource)

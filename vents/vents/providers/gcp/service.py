@@ -1,71 +1,77 @@
 import json
 import os
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
+
+from google.oauth2.service_account import Credentials
 
 from vents.providers.base import BaseService
-from vents.providers.gcp.base import get_default_key_path, get_gc_client
-from vents.settings import VENTS_CONFIG
+from vents.providers.gcp.base import (
+    get_default_key_path,
+    get_gc_credentials,
+    get_key_path,
+    get_keyfile_dict,
+    get_project_id,
+    get_scopes,
+)
 
 if TYPE_CHECKING:
-    from google.oauth2.service_account import Credentials
+    from google.cloud.storage.client import Client
 
     from vents.connections.connection import Connection
 
 
 class GCPService(BaseService):
-    def __init__(self, connection=None, **kwargs):
-        super().__init__(connection=connection, **kwargs)
-        self._project_id = kwargs.get("project_id")
-        self._credentials = kwargs.get("credentials")
-        self._key_path = kwargs.get("key_path")
-        self._keyfile_dict = kwargs.get("keyfile_dict")
-        self._scopes = kwargs.get("scopes")
-        self._encoding = kwargs.get("encoding", "utf-8")
+    project_id: Optional[str]
+    key_path: Optional[str]
+    keyfile_dict: Optional[str]
+    scopes: Optional[List[str]]
+    credentials: Optional[Credentials]
+    client_info = Optional[Any]
+    client_options = Optional[Any]
+    encoding: Optional[str] = "utf-8"
 
-    def set_connection(
-        self,
-        connection: Optional[str] = None,
-        connection_type: Optional["Connection"] = None,
-        project_id: Optional[str] = None,
-        key_path: Optional[str] = None,
-        keyfile_dict: Optional[str] = None,
-        credentials: Optional["Credentials"] = None,
-        scopes: Optional[List[str]] = None,
-    ):
-        """
-        Sets a new gc client.
-
-        Args:
-            project_id: `str`. The project if.
-            key_path: `str`. The path to the json key file.
-            keyfile_dict: `str`. The dict containing the auth data.
-            credentials: `Credentials instance`. The credentials to use.
-            scopes: `list`. The scopes.
-
-        Returns:
-            Service client instance
-        """
+    @classmethod
+    def load_from_connection(
+        cls, connection: Optional["Connection"]
+    ) -> Optional["GCPService"]:
+        # Check if there are mounting based on secrets/configmaps
+        context_paths = []
         if connection:
-            self._connection = connection
-            return
-        connection_type = connection_type or self._connection_type
-        connection_name = connection_type.name if connection_type else None
-        context_path = VENTS_CONFIG.get_connection_context_path(name=connection_name)
-        self._connection = get_gc_client(
-            project_id=project_id or self._project_id,
-            key_path=key_path or self._key_path,
-            keyfile_dict=keyfile_dict or self._keyfile_dict,
-            credentials=credentials or self._credentials,
-            scopes=scopes or self._scopes,
-            context_path=context_path,
+            if connection.secret and connection.secret.mount_path:
+                context_paths.append(connection.secret.mount_path)
+            if connection.config_map and connection.config_map.mount_path:
+                context_paths.append(connection.config_map.mount_path)
+        project_id = get_project_id(context_paths=context_paths)
+        key_path = get_key_path(context_paths=context_paths)
+        keyfile_dict = get_keyfile_dict(context_paths=context_paths)
+        scopes = get_scopes(context_paths=context_paths)
+        credentials = get_gc_credentials(
+            key_path=key_path,
+            keyfile_dict=keyfile_dict,
+            scopes=scopes,
+        )
+        return cls(
+            project_id=project_id,
+            key_path=key_path,
+            keyfile_dict=keyfile_dict,
+            scopes=scopes,
+            credentials=credentials,
+        )
+
+    def _set_session(self):
+        self._session = Client(
+            project=self.project_id,
+            credentials=self.credentials,
+            client_info=self.client_info,
+            client_options=self.client_options,
         )
 
     def set_env_vars(self):
-        if self._key_path:
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self._key_path
-        elif self._keyfile_dict:
+        if self.key_path:
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.key_path
+        elif self.keyfile_dict:
             key_path = get_default_key_path()
             with open(key_path, "w") as outfile:
-                json.dump(self._keyfile_dict, outfile)
+                json.dump(self.keyfile_dict, outfile)
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
