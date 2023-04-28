@@ -33,8 +33,10 @@ jobs:
       run: |
         which python
         python -m pip install --upgrade pip
-    - name: Install test dependencies
+    - name: Install proc dependencies
       run: pip install -r vents/requirements/prod.txt
+    - name: Install dev dependencies
+      run: pip install -r vents/requirements/dev.txt
     - name: Install test dependencies
       run: pip install -r vents/requirements/test.txt
     - name: Test with pytest
