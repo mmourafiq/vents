@@ -34,8 +34,10 @@ jobs:
         which python
         python -m pip install --upgrade pip
     - name: Install test dependencies
-      run: pip install -r congruent/requirements/test.txt
+      run: pip install -r vents/requirements/prod.txt
+    - name: Install test dependencies
+      run: pip install -r vents/requirements/test.txt
     - name: Test with pytest
       run: |
-        cd congruent
+        cd vents
         pytest -vv
