@@ -17,15 +17,20 @@ class S3Service(AWSService):
         self,
         asynchronous: Optional[bool] = False,
         use_listings_cache: Optional[bool] = False,
-        config_kwargs: Optional[Dict] = None,
-        client_kwargs: Optional[Dict] = None,
         **kwargs
     ):
+        config_kwargs = kwargs.get("config_kwargs", {})
+        if self.region and "region_name" not in config_kwargs:
+            config_kwargs["region_name"] = self.region
+        client_kwargs = kwargs.get("client_kwargs", {})
+        if self.verify_ssl is not None and "verify" not in client_kwargs:
+            client_kwargs["verify"] = self.verify_ssl
         self._session = S3FileSystem(
             key=self.access_key_id,
             secret=self.secret_access_key,
             token=self.session_token,
             use_ssl=self.use_ssl,
+            endpoint_url=self.endpoint_url,
             config_kwargs=config_kwargs,
             client_kwargs=client_kwargs,
             asynchronous=asynchronous,
@@ -37,15 +42,11 @@ class S3Service(AWSService):
         self,
         asynchronous: Optional[bool] = False,
         use_listings_cache: Optional[bool] = False,
-        config_kwargs: Optional[Dict] = None,
-        client_kwargs: Optional[Dict] = None,
         **kwargs
     ):
         self._set_session(
             asynchronous=asynchronous,
             use_listings_cache=use_listings_cache,
-            config_kwargs=config_kwargs,
-            client_kwargs=client_kwargs,
             **kwargs,
         )
         return self.session
