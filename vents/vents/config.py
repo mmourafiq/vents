@@ -7,8 +7,8 @@ from clipped.config.parser import ConfigParser
 from clipped.config.schema import BaseSchemaModel
 from clipped.types import Uri
 from clipped.utils.paths import check_dirname_exists
-from pydantic import ValidationError
 
+from vents.connections import ConnectionCatalog
 from vents.connections.connection import Connection
 from vents.exceptions import VentError
 
@@ -24,6 +24,11 @@ class AppConfig(BaseSchemaModel):
     logger: Any = _logger
     exception: Type[Exception] = VentError
     config_parser: Type[ConfigParser] = ConfigParser
+    catalog: Optional[ConnectionCatalog]
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        self.catalog = self.catalog or self.load_connections_catalog()
 
     def get_from_env(self, keys: Union[Set[str], List[str], str]) -> Any:
         """
@@ -92,52 +97,33 @@ class AppConfig(BaseSchemaModel):
 
         return None
 
-    def get_connection_context_path_env_name(self, name: str) -> str:
-        env_name = "CONNECTION_CONTEXT_PATH_".format(name.upper())
+    def get_connections_catalog_env_name(self) -> str:
+        env_name = "CONNECTIONS_CATALOG"
         if self.env_prefix:
             env_name = "{}_{}".format(self.env_prefix, env_name)
         return env_name
 
-    def get_connection_schema_env_name(self, name: str) -> str:
-        env_name = "CONNECTION_SCHEMA_".format(name.upper())
-        if self.env_prefix:
-            env_name = "{}_{}".format(self.env_prefix, env_name)
-        return env_name
+    @staticmethod
+    def get_connections_catalog(
+        connections: Optional[List[Connection]],
+    ) -> Optional[ConnectionCatalog]:
+        if not connections:
+            return None
+        return ConnectionCatalog(connections=connections)
 
-    def get_connection_context_path(self, name: Optional[str]) -> Optional[str]:
+    def load_connections_catalog(self) -> Optional[ConnectionCatalog]:
+        catalog_env_name = self.get_connections_catalog_env_name()
+        connections_catalog = os.environ.get(catalog_env_name)
+        if not connections_catalog:
+            return None
+        return ConnectionCatalog.read(connections_catalog, config_type=".json")
+
+    def get_connection_for(self, name: Optional[str]) -> Optional[Connection]:
         """Checks if a connection has a mount path exported"""
-        if not name:
+        if not name or not self.catalog:
             return None
 
-        context_path = os.environ.get(self.get_connection_context_path_env_name(name))
-        if not context_path:
-            return None
-
-        if not os.path.exists(context_path):
-            self.logger.warning(
-                "A connection path was found for {}, "
-                "but a path the {} does not exist.".format(name, context_path)
-            )
-            return None
-        return context_path
-
-    def get_connection_type(self, name: Optional[str]) -> Optional[Connection]:
-        """Checks if a connection has a mount path exported"""
-        if not name:
-            return None
-
-        spec = os.environ.get(self.get_connection_schema_env_name(name))
-        if not spec:
-            return None
-
-        try:
-            return Connection.read(spec, config_type=".json")
-        except ValidationError as e:
-            self.logger.warning(
-                "A connection spec was found for {}, "
-                "but the reading the spec raised an error {}.".format(name, repr(e))
-            )
-            return None
+        return self.catalog.connections_by_names.get(name)
 
     def read_keys(self, context_paths: List[str], keys: List[str]) -> Optional[Any]:
         """Returns a variable by checking first a context path and then in the environment."""
