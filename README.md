@@ -5,7 +5,7 @@
 
 # Vents
 
-Open source integrations, alerting, and notification library.
+Open source connections catalog, integrations, alerting, and notifications library.
 
 ## Install
 
