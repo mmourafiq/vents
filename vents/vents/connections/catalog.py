@@ -14,6 +14,18 @@ class ConnectionCatalog(BaseSchemaModel):
     _config_maps: Optional[List[K8sResource]] = PrivateAttr()
     _connections_by_names: Dict[str, Connection] = PrivateAttr()
 
+    def __init__(
+        self,
+        **data,
+    ):
+        super().__init__(**data)
+        # Post init
+        self._all_connections = []
+        self._connections_by_names = {}
+        self._secrets = None
+        self._config_maps = None
+        self.set_all_connections()
+
     def set_all_connections(self) -> None:
         self._all_connections = self.connections[:] if self.connections else []
         self._connections_by_names = {}
