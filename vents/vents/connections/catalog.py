@@ -29,6 +29,8 @@ class ConnectionCatalog(BaseSchemaModel):
     def set_all_connections(self) -> None:
         self._all_connections = self.connections[:] if self.connections else []
         self._connections_by_names = {}
+        self._secrets = None
+        self._config_maps = None
 
     @property
     def all_connections(self) -> List[Connection]:
