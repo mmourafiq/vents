@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from clipped.config.schema import BaseSchemaModel
 from clipped.types.ref_or_obj import RefField
@@ -92,3 +92,25 @@ class Connection(BaseSchemaModel):
     @property
     def is_wasb(self) -> bool:
         return ProviderKind.is_wasb(self.kind)
+
+    @staticmethod
+    def get_requested_resources(
+        resources: List[ConnectionResource],
+        connections: List["Connection"],
+        resource_key: Literal["secret", "config_map"],
+    ) -> List[ConnectionResource]:
+        resources = resources or []
+
+        connections = connections or []
+        # Create a set of all resources:
+        #   * resources request by non managed connections
+        #   * resources requested directly by the user
+        requested_resources = [r for r in resources if r.is_requested]
+        resource_ids = {s.name for s in requested_resources}
+        for connection in connections:
+            resource = getattr(connection, resource_key)
+            if resource and resource.name not in resource_ids:
+                resource_ids.add(resource.name)
+                requested_resources.append(resource)
+
+        return requested_resources

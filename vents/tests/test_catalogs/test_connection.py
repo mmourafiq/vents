@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from vents.connections import ConnectionResource
 from vents.connections.connection import Connection
 from vents.connections.connection_schema import (
     BucketConnection,
@@ -115,3 +116,221 @@ class TestConnection(TestCase):
         self.assert_from_model(self.custom_connection1)
         assert self.custom_connection2.schema_ == {"key1": "val1", "key2": "val2"}
         self.assert_from_model(self.custom_connection2)
+
+
+class TestMainSecrets(TestCase):
+    def setUp(self):
+        # Secrets
+        self.resource1 = ConnectionResource(
+            name="non_mount_test1",
+            items=["item1", "item2"],
+            is_requested=False,
+        )
+        self.resource2 = ConnectionResource(
+            name="non_mount_test2",
+            is_requested=False,
+        )
+        self.resource3 = ConnectionResource(
+            name="non_mount_test3",
+            items=["item1", "item2"],
+            is_requested=True,
+        )
+        self.resource4 = ConnectionResource(
+            name="non_mount_test4",
+            is_requested=True,
+        )
+        self.resource5 = ConnectionResource(
+            name="non_mount_test1",
+            is_requested=True,
+        )
+
+        # Connections
+        self.s3_store = Connection(
+            name="test_s3",
+            kind=ProviderKind.S3,
+            schema_=BucketConnection(bucket="s3//:foo"),
+            secret=self.resource1,
+        )
+        self.gcs_store = Connection(
+            name="test_gcs",
+            kind=ProviderKind.GCS,
+            schema_=BucketConnection(bucket="gcs//:foo"),
+            secret=self.resource2,
+        )
+        self.az_store = Connection(
+            name="test_az",
+            kind=ProviderKind.WASB,
+            schema_=BucketConnection(bucket="wasb://x@y.blob.core.windows.net"),
+            secret=self.resource3,
+        )
+        self.claim_store = Connection(
+            name="test_claim",
+            kind=ProviderKind.VOLUME_CLAIM,
+            schema_=ClaimConnection(mount_path="/tmp", volume_claim="test"),
+        )
+        self.host_path_store = Connection(
+            name="test_path",
+            kind=ProviderKind.HOST_PATH,
+            schema_=HostPathConnection(
+                mount_path="/tmp", host_path="/tmp", read_only=True
+            ),
+        )
+
+    def test_get_requested_secrets_non_values(self):
+        assert (
+            Connection.get_requested_resources(
+                resources=None, connections=None, resource_key="secret"
+            )
+            == []
+        )
+        assert (
+            Connection.get_requested_resources(
+                resources=[], connections=[], resource_key="secret"
+            )
+            == []
+        )
+        assert (
+            Connection.get_requested_resources(
+                resources=[self.resource1, self.resource2],
+                connections=[],
+                resource_key="secret",
+            )
+            == []
+        )
+        assert (
+            Connection.get_requested_resources(
+                resources=[],
+                connections=[self.host_path_store, self.claim_store],
+                resource_key="secret",
+            )
+            == []
+        )
+
+    def test_get_requested_secrets_and_secrets(self):
+        expected = Connection.get_requested_resources(
+            resources=[], connections=[self.s3_store], resource_key="secret"
+        )
+        assert expected == [self.resource1]
+
+        expected = Connection.get_requested_resources(
+            resources=[self.resource2],
+            connections=[self.s3_store],
+            resource_key="secret",
+        )
+        assert expected == [self.resource1]
+
+        expected = Connection.get_requested_resources(
+            resources=[self.resource2],
+            connections=[self.s3_store, self.gcs_store],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource1,
+            self.resource2,
+        ]
+
+        expected = Connection.get_requested_resources(
+            resources=[self.resource1, self.resource2],
+            connections=[self.s3_store, self.gcs_store, self.az_store],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource1,
+            self.resource2,
+            self.resource3,
+        ]
+
+    def test_get_requested_secrets(self):
+        expected = Connection.get_requested_resources(
+            resources=[self.resource1],
+            connections=[self.s3_store],
+            resource_key="secret",
+        )
+        assert expected == [self.resource1]
+        expected = Connection.get_requested_resources(
+            resources=[self.resource1, self.resource3],
+            connections=[self.s3_store],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource3,
+            self.resource1,
+        ]
+        expected = Connection.get_requested_resources(
+            resources=[self.resource2, self.resource3, self.resource4],
+            connections=[self.gcs_store],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource3,
+            self.resource4,
+            self.resource2,
+        ]
+        expected = Connection.get_requested_resources(
+            resources=[self.resource1, self.resource2],
+            connections=[self.gcs_store],
+            resource_key="secret",
+        )
+        assert expected == [self.resource2]
+        expected = Connection.get_requested_resources(
+            resources=[self.resource1, self.resource2],
+            connections=[self.s3_store, self.gcs_store],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource1,
+            self.resource2,
+        ]
+        expected = Connection.get_requested_resources(
+            resources=[self.resource1, self.resource2],
+            connections=[
+                self.s3_store,
+                self.gcs_store,
+                self.host_path_store,
+                self.claim_store,
+            ],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource1,
+            self.resource2,
+        ]
+
+        new_az_store = Connection(
+            name="test_az",
+            kind=ProviderKind.WASB,
+            schema_=BucketConnection(bucket="wasb://x@y.blob.core.windows.net"),
+            secret=self.resource1,
+        )
+        expected = Connection.get_requested_resources(
+            resources=[self.resource1, self.resource2],
+            connections=[
+                self.s3_store,
+                self.gcs_store,
+                new_az_store,
+                self.host_path_store,
+                self.claim_store,
+            ],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource1,
+            self.resource2,
+        ]
+
+        # Using a requested secret with same id
+        expected = Connection.get_requested_resources(
+            resources=[self.resource5, self.resource2],
+            connections=[
+                self.s3_store,
+                self.gcs_store,
+                new_az_store,
+                self.host_path_store,
+                self.claim_store,
+            ],
+            resource_key="secret",
+        )
+        assert expected == [
+            self.resource5,
+            self.resource2,
+        ]
