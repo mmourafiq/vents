@@ -4,14 +4,14 @@ from clipped.config.schema import BaseSchemaModel
 from pydantic import PrivateAttr
 
 from vents.connections.connection import Connection
-from vents.connections.k8s_resource import K8sResource
+from vents.connections.connection_resource import ConnectionResource
 
 
 class ConnectionCatalog(BaseSchemaModel):
     connections: Optional[List[Connection]]
     _all_connections: List[Connection] = PrivateAttr()
-    _secrets: Optional[List[K8sResource]] = PrivateAttr()
-    _config_maps: Optional[List[K8sResource]] = PrivateAttr()
+    _secrets: Optional[List[ConnectionResource]] = PrivateAttr()
+    _config_maps: Optional[List[ConnectionResource]] = PrivateAttr()
     _connections_by_names: Dict[str, Connection] = PrivateAttr()
 
     def __init__(
@@ -37,7 +37,7 @@ class ConnectionCatalog(BaseSchemaModel):
         return self._all_connections
 
     @property
-    def secrets(self) -> List[K8sResource]:
+    def secrets(self) -> List[ConnectionResource]:
         if self._secrets or not self._all_connections:
             return self._secrets
         secret_names = set()
@@ -50,7 +50,7 @@ class ConnectionCatalog(BaseSchemaModel):
         return self._secrets
 
     @property
-    def config_maps(self) -> List[K8sResource]:
+    def config_maps(self) -> List[ConnectionResource]:
         if self._config_maps or not self._all_connections:
             return self._config_maps
         config_map_names = set()

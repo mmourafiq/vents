@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from vents.connections import ConnectionCatalog, K8sResource
+from vents.connections import ConnectionCatalog, ConnectionResource
 from vents.connections.connection import Connection
 from vents.connections.connection_schema import BucketConnection
 from vents.providers.kinds import ProviderKind
@@ -9,18 +9,18 @@ from vents.providers.kinds import ProviderKind
 class TestConnectionCatalog(TestCase):
     def setUp(self):
         super().setUp()
-        self.secret1 = K8sResource(
+        self.secret1 = ConnectionResource(
             name="non_mount_test1",
             items=["item1", "item2"],
         )
-        self.secret2 = K8sResource(
+        self.secret2 = ConnectionResource(
             name="non_mount_test2",
         )
-        self.secret3 = K8sResource(
+        self.secret3 = ConnectionResource(
             name="non_mount_test3",
             items=["item1", "item2"],
         )
-        self.config1 = K8sResource(
+        self.config1 = ConnectionResource(
             name="non_mount_test1",
             items=["item1", "item2"],
         )

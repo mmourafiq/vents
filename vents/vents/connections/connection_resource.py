@@ -4,11 +4,12 @@ from clipped.config.schema import BaseSchemaModel
 from pydantic import Field, StrictStr
 
 
-class K8sResource(BaseSchemaModel):
-    _IDENTIFIER = "k8s_resource"
+class ConnectionResource(BaseSchemaModel):
+    _IDENTIFIER = "connection_resource"
 
     name: StrictStr
     mount_path: Optional[StrictStr] = Field(alias="mountPath")
+    host_path: Optional[StrictStr] = Field(alias="hostPath")
     items: Optional[List[StrictStr]]
     default_mode: Optional[str] = Field(alias="defaultMode")
     is_requested: Optional[bool] = Field(alias="isRequested")

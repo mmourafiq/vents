@@ -4,8 +4,8 @@ from clipped.config.schema import BaseSchemaModel
 from clipped.types.ref_or_obj import RefField
 from pydantic import Field, StrictStr
 
+from vents.connections.connection_resource import ConnectionResource
 from vents.connections.connection_schema import ConnectionSchema
-from vents.connections.k8s_resource import K8sResource
 from vents.providers.kinds import ProviderKind
 
 
@@ -17,8 +17,8 @@ class Connection(BaseSchemaModel):
     description: Optional[StrictStr]
     tags: Optional[Union[List[StrictStr], RefField]]
     schema_: Optional[ConnectionSchema] = Field(alias="schema")
-    secret: Optional[Union[K8sResource, RefField]]
-    config_map: Optional[Union[K8sResource, RefField]] = Field(alias="configMap")
+    secret: Optional[Union[ConnectionResource, RefField]]
+    config_map: Optional[Union[ConnectionResource, RefField]] = Field(alias="configMap")
     env: Optional[Union[List[Dict], RefField]]
     annotations: Optional[Union[Dict, RefField]]
 
