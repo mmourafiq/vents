@@ -1,4 +1,5 @@
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Optional, Union
+from typing_extensions import Literal
 
 from clipped.config.schema import BaseSchemaModel
 from clipped.types.ref_or_obj import RefField
