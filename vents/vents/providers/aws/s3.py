@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 
 from s3fs import S3FileSystem as BaseS3FileSystem
 
