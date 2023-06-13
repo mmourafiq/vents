@@ -111,6 +111,9 @@ class AppConfig(BaseSchemaModel):
             return None
         return ConnectionCatalog(connections=connections)
 
+    def set_connections_catalog(self, connections: Optional[List[Connection]]):
+        self.catalog = self.get_connections_catalog(connections)
+
     def load_connections_catalog(self) -> Optional[ConnectionCatalog]:
         catalog_env_name = self.get_connections_catalog_env_name()
         connections_catalog = os.environ.get(catalog_env_name)
