@@ -1,8 +1,8 @@
 from typing import Dict, List, Optional, Union
 
+from clipped.compact.pydantic import Field, StrictStr
 from clipped.config.schema import BaseSchemaModel
 from clipped.types.ref_or_obj import RefField
-from pydantic import Field, StrictStr
 
 
 class BucketConnection(BaseSchemaModel):

@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
+from clipped.compact.pydantic import PrivateAttr
 from clipped.config.schema import BaseSchemaModel
-from pydantic import PrivateAttr
 
 from vents.connections.connection import Connection
 from vents.connections.connection_resource import ConnectionResource

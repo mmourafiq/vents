@@ -1,7 +1,7 @@
 from typing import List, Optional
 
+from clipped.compact.pydantic import Field, StrictStr
 from clipped.config.schema import BaseSchemaModel
-from pydantic import Field, StrictStr
 
 
 class ConnectionResource(BaseSchemaModel):

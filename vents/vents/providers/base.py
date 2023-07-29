@@ -2,8 +2,8 @@ import abc
 
 from typing import TYPE_CHECKING, Any, Optional
 
+from clipped.compact.pydantic import Extra, PrivateAttr
 from clipped.config.schema import BaseSchemaModel
-from pydantic import Extra, PrivateAttr
 
 if TYPE_CHECKING:
     from vents.connections.catalog import ConnectionCatalog

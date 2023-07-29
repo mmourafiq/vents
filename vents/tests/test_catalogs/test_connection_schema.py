@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pydantic import ValidationError
+from clipped.compact.pydantic import ValidationError
 
 from vents.connections.connection_schema import (
     BucketConnection,

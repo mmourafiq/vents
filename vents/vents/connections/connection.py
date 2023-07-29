@@ -1,9 +1,9 @@
 from typing import Dict, List, Optional, Union
 from typing_extensions import Literal
 
+from clipped.compact.pydantic import Field, StrictStr
 from clipped.config.schema import BaseSchemaModel
 from clipped.types.ref_or_obj import RefField
-from pydantic import Field, StrictStr
 
 from vents.connections.connection_resource import ConnectionResource
 from vents.connections.connection_schema import ConnectionSchema
