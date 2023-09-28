@@ -1,6 +1,6 @@
 NAME = "vents"
-VERSION = "0.2.1"
-DESC = "Open source integrations, alerting, and notification library."
+VERSION = "0.2.2"
+DESC = "Open source connections, integrations, alerting, and notification library."
 URL = "https://github.com/mmourafiq/vents"
 AUTHOR = "Mourad Mourafiq"
 EMAIL = "mourad.mourafiq@gmail.com"
