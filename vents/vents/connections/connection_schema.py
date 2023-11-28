@@ -84,7 +84,9 @@ class GitConnection(BaseSchemaModel):
         self.flags = schema.flags or self.flags
 
 
-def patch_git(schema: Dict, git_schema: GitConnection):
+def patch_git(schema: Union[Dict, BaseSchemaModel], git_schema: GitConnection):
+    if isinstance(schema, BaseSchemaModel) and not isinstance(schema, GitConnection):
+        schema = GitConnection.from_dict(schema.to_dict())
     if git_schema.url:
         setattr(schema, "url", git_schema.url)
     if git_schema.revision:
