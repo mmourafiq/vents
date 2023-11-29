@@ -94,6 +94,8 @@ def patch_git(schema: Union[Dict, BaseSchemaModel], git_schema: GitConnection):
     if git_schema.flags:
         setattr(schema, "flags", git_schema.flags)
 
+    return schema
+
 
 ConnectionSchema = Union[
     BucketConnection,
