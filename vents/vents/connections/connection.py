@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, ClassVar
+from typing import Dict, List, Optional, Union
 from typing_extensions import Literal
 
 from clipped.compact.pydantic import Field, StrictStr
