@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, ClassVar
 from typing_extensions import Literal
 
 from clipped.compact.pydantic import Field, StrictStr
@@ -15,6 +15,7 @@ class Connection(BaseSchemaModel):
 
     name: StrictStr
     kind: ProviderKind
+    is_alias: ClassVar[Optional[bool]] = Field(alias="isAlias")
     description: Optional[StrictStr]
     tags: Optional[Union[List[StrictStr], RefField]]
     schema_: Optional[ConnectionSchema] = Field(alias="schema")
