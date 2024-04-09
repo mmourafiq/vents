@@ -15,7 +15,7 @@ class Connection(BaseSchemaModel):
 
     name: StrictStr
     kind: ProviderKind
-    is_alias: ClassVar[Optional[bool]] = Field(alias="isAlias")
+    is_alias: Optional[bool] = Field(alias="isAlias", exclude=True)
     description: Optional[StrictStr]
     tags: Optional[Union[List[StrictStr], RefField]]
     schema_: Optional[ConnectionSchema] = Field(alias="schema")
