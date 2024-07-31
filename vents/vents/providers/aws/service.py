@@ -4,8 +4,11 @@ from typing import TYPE_CHECKING, Optional
 
 from vents.providers.aws.base import (
     get_aws_access_key_id,
+    get_aws_role_arn,
     get_aws_secret_access_key,
     get_aws_security_token,
+    get_aws_session_duration,
+    get_aws_session_name,
     get_aws_use_ssl,
     get_aws_verify_ssl,
     get_endpoint_url,
@@ -45,6 +48,25 @@ class AWSService(BaseService):
         verify_ssl = get_aws_verify_ssl(context_paths=context_paths)
         use_ssl = get_aws_use_ssl(context_paths=context_paths)
         session_token = get_aws_security_token(context_paths=context_paths)
+        role_arn = get_aws_role_arn(context_paths=context_paths)
+        session_name = get_aws_session_name(context_paths=context_paths)
+        session_duration = get_aws_session_duration(context_paths=context_paths)
+        if role_arn:
+            credentials = cls.assume_role(
+                role_arn=role_arn,
+                session_name=session_name,
+                session_duration=session_duration,
+                region=region,
+                endpoint_url=endpoint_url,
+                access_key_id=access_key_id,
+                secret_access_key=secret_access_key,
+                session_token=session_token,
+                verify_ssl=verify_ssl,
+                use_ssl=use_ssl,
+            )
+            access_key_id = credentials["AccessKeyId"]
+            secret_access_key = credentials["SecretAccessKey"]
+            session_token = credentials["SessionToken"]
         return cls(
             region=region,
             endpoint_url=endpoint_url,
@@ -54,6 +76,39 @@ class AWSService(BaseService):
             verify_ssl=verify_ssl,
             use_ssl=use_ssl,
         )
+
+    @classmethod
+    def assume_role(
+        cls,
+        role_arn: str,
+        session_name: Optional[str] = None,
+        session_duration: Optional[int] = 3600,
+        region: Optional[str] = None,
+        endpoint_url: Optional[str] = None,
+        access_key_id: Optional[str] = None,
+        secret_access_key: Optional[str] = None,
+        session_token: Optional[str] = None,
+        verify_ssl: Optional[bool] = None,
+        use_ssl: Optional[bool] = None,
+    ) -> "AWSService":
+        import boto3
+
+        client = boto3.client(
+            "sts",
+            region_name=region,
+            endpoint_url=endpoint_url,
+            use_ssl=use_ssl,
+            verify=verify_ssl,
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
+            aws_session_token=session_token,
+        )
+        response = client.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName=session_name or "S3Session",
+            DurationSeconds=session_duration or 3600,
+        )
+        return response["Credentials"]
 
     def _set_session(self):
         import boto3
