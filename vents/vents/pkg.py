@@ -1,5 +1,5 @@
 NAME = "vents"
-VERSION = "0.4.2"
+VERSION = "0.4.3"
 DESC = "Open source connections, integrations, alerting, and notification library."
 URL = "https://github.com/mmourafiq/vents"
 AUTHOR = "Mourad Mourafiq"
