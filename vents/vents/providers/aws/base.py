@@ -131,7 +131,7 @@ def get_aws_session_name(
     context_paths: Optional[List[str]] = None,
 ) -> Optional[str]:
     keys = keys or ["AWS_SESSION_NAME"]
-    return VENTS_CONFIG.read_keys(context_paths=context_path, keys=keys)  # type: ignore
+    return VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
 
 
 def get_aws_session_duration(
@@ -139,4 +139,4 @@ def get_aws_session_duration(
     context_paths: Optional[List[str]] = None,
 ) -> Optional[str]:
     keys = keys or ["AWS_SESSION_DURATION"]
-    return VENTS_CONFIG.read_keys(context_paths=context_path, keys=keys)  # type: ignore
+    return VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
