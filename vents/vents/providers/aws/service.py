@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from vents.providers.aws.base import (
     get_aws_access_key_id,
+    get_aws_assume_role,
     get_aws_role_arn,
     get_aws_secret_access_key,
     get_aws_security_token,
@@ -48,10 +49,11 @@ class AWSService(BaseService):
         verify_ssl = get_aws_verify_ssl(context_paths=context_paths)
         use_ssl = get_aws_use_ssl(context_paths=context_paths)
         session_token = get_aws_security_token(context_paths=context_paths)
+        assume_role = get_aws_assume_role(context_paths=context_paths)
         role_arn = get_aws_role_arn(context_paths=context_paths)
         session_name = get_aws_session_name(context_paths=context_paths)
         session_duration = get_aws_session_duration(context_paths=context_paths)
-        if role_arn:
+        if assume_role and role_arn:
             credentials = cls.assume_role(
                 role_arn=role_arn,
                 session_name=session_name,
@@ -91,22 +93,21 @@ class AWSService(BaseService):
         verify_ssl: Optional[bool] = None,
         use_ssl: Optional[bool] = None,
     ) -> "AWSService":
-        import boto3
+        import botocore.session
 
-        client = boto3.client(
+        session = botocore.session.get_session()
+        client = session.create_client(
             "sts",
             region_name=region,
-            endpoint_url=endpoint_url,
             use_ssl=use_ssl,
             verify=verify_ssl,
             aws_access_key_id=access_key_id,
             aws_secret_access_key=secret_access_key,
-            aws_session_token=session_token,
         )
         response = client.assume_role(
             RoleArn=role_arn,
             RoleSessionName=session_name or "S3Session",
-            DurationSeconds=session_duration or 3600,
+            DurationSeconds=session_duration or 3600 * 1000,
         )
         return response["Credentials"]
 

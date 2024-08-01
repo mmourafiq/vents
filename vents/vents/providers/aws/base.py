@@ -118,6 +118,14 @@ def get_aws_resource(
     )
 
 
+def get_aws_assume_role(
+    keys: Optional[Union[str, List[str]]] = None,
+    context_paths: Optional[List[str]] = None,
+) -> Optional[bool]:
+    keys = keys or ["AWS_ASSUME_ROLE"]
+    return VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
+
+
 def get_aws_role_arn(
     keys: Optional[Union[str, List[str]]] = None,
     context_paths: Optional[List[str]] = None,
