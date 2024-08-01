@@ -84,7 +84,7 @@ class AWSService(BaseService):
         cls,
         role_arn: str,
         session_name: Optional[str] = None,
-        session_duration: Optional[int] = 3600,
+        session_duration: Optional[int] = 43200,
         region: Optional[str] = None,
         endpoint_url: Optional[str] = None,
         access_key_id: Optional[str] = None,
@@ -107,7 +107,7 @@ class AWSService(BaseService):
         response = client.assume_role(
             RoleArn=role_arn,
             RoleSessionName=session_name or "S3Session",
-            DurationSeconds=session_duration or 3600 * 1000,
+            DurationSeconds=session_duration or 43200,
         )
         return response["Credentials"]
 
