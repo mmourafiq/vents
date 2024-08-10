@@ -1,5 +1,7 @@
 from typing import List, Optional, Union
 
+from clipped.utils.bools import to_bool
+
 from vents.settings import VENTS_CONFIG
 
 
@@ -46,23 +48,23 @@ def get_endpoint_url(
 def get_aws_use_ssl(
     keys: Optional[Union[str, List[str]]] = None,
     context_paths: Optional[List[str]] = None,
-) -> bool:
+) -> Optional[bool]:
     keys = keys or ["AWS_USE_SSL"]
     value = VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
     if value is not None:
-        return value
+        return to_bool(value)
     return True
 
 
 def get_aws_verify_ssl(
     keys: Optional[Union[str, List[str]]] = None,
     context_paths: Optional[List[str]] = None,
-) -> bool:
+) -> Optional[bool]:
     keys = keys or ["AWS_VERIFY_SSL"]
     value = VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
     if value is not None:
-        return value
-    return True
+        return to_bool(value)
+    return None
 
 
 def get_aws_session(
@@ -123,7 +125,10 @@ def get_aws_assume_role(
     context_paths: Optional[List[str]] = None,
 ) -> Optional[bool]:
     keys = keys or ["AWS_ASSUME_ROLE"]
-    return VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
+    value = VENTS_CONFIG.read_keys(context_paths=context_paths, keys=keys)  # type: ignore
+    if value is not None:
+        return to_bool(value)
+    return None
 
 
 def get_aws_role_arn(
