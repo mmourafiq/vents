@@ -44,6 +44,9 @@ class AWSService(BaseService):
                 context_paths.append(connection.config_map.mount_path)
         region = get_region(context_paths=context_paths)
         endpoint_url = get_endpoint_url(context_paths=context_paths)
+        sts_endpoint_url = get_endpoint_url(
+            keys=["AWS_STS_ENDPOINT_URL"], context_paths=context_paths
+        )
         access_key_id = get_aws_access_key_id(context_paths=context_paths)
         secret_access_key = get_aws_secret_access_key(context_paths=context_paths)
         verify_ssl = get_aws_verify_ssl(context_paths=context_paths)
@@ -59,10 +62,9 @@ class AWSService(BaseService):
                 session_name=session_name,
                 session_duration=session_duration,
                 region=region,
-                endpoint_url=endpoint_url,
+                endpoint_url=sts_endpoint_url,
                 access_key_id=access_key_id,
                 secret_access_key=secret_access_key,
-                session_token=session_token,
                 verify_ssl=verify_ssl,
                 use_ssl=use_ssl,
             )
@@ -89,13 +91,13 @@ class AWSService(BaseService):
         endpoint_url: Optional[str] = None,
         access_key_id: Optional[str] = None,
         secret_access_key: Optional[str] = None,
-        session_token: Optional[str] = None,
         verify_ssl: Optional[bool] = None,
         use_ssl: Optional[bool] = None,
     ) -> "AWSService":
         import botocore.session
 
         session = botocore.session.get_session()
+        endpoint_url = endpoint_url or "https://sts.{}.amazonaws.com".format(region)
         client = session.create_client(
             "sts",
             region_name=region,
@@ -103,6 +105,7 @@ class AWSService(BaseService):
             verify=verify_ssl,
             aws_access_key_id=access_key_id,
             aws_secret_access_key=secret_access_key,
+            endpoint_url=endpoint_url,
         )
         response = client.assume_role(
             RoleArn=role_arn,
