@@ -1,4 +1,4 @@
-clipped==0.7.*
+clipped==0.8.*
 orjson>=3.7
 pydantic>=1.10.2
 PyYAML>=5.1
