@@ -6,13 +6,13 @@ import boto3
 
 from boto3.resources.base import ServiceResource
 from botocore.client import BaseClient
-from moto import mock_s3
+from moto import mock_aws
 
 from vents.providers.aws.service import AWSService
 
 
 class TestAwsClient(TestCase):
-    @mock_s3
+    @mock_aws
     def test_get_aws_session(self):
         aws_service = AWSService(
             access_key_id="a1",
@@ -51,13 +51,13 @@ class TestAwsClient(TestCase):
         os.environ["AWS_SECURITY_TOKEN"] = ""
         os.environ["AWS_REGION"] = ""
 
-    @mock_s3
+    @mock_aws
     def test_get_client(self):
         aws_service = AWSService(resource="s3")
         s3_client = aws_service.get_client()
         assert isinstance(s3_client, BaseClient)
 
-    @mock_s3
+    @mock_aws
     def test_get_resource(self):
         aws_service = AWSService(resource="s3")
         s3_resource = aws_service.get_resource()
